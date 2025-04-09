@@ -49,8 +49,6 @@ jobs:
       packages: write
     needs: compile
     if: success()
-    env:
-      IMAGE_NAME: ghcr.io/${{ github.repository }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -68,8 +66,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME,, }}:latest .
+        run: |
+          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t $IMAGE_NAME:latest .
 
       - name: Push Docker image
-        run: docker push ${{ env.IMAGE_NAME,, }}:latest
+        run: |
+          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker push $IMAGE_NAME:latest
 
