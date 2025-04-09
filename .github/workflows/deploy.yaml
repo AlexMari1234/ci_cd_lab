@@ -1,47 +1,3 @@
-name: Build CI/CD
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Run tests
-        run: go test ./...
-
-  compile:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Compile binary
-        run: go build -o myapp
-
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -49,6 +5,8 @@ jobs:
       packages: write
     needs: compile
     if: success()
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,8 +24,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository_lowercase }}:latest .
+        run: docker build -t ${{ env.IMAGE_NAME,, }}:latest .
 
       - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository_lowercase }}:latest
+        run: docker push ${{ env.IMAGE_NAME,, }}:latest
 
